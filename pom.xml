@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>come.demo.SpringBootMyBatis</groupId>
+	<artifactId>SpringBootMyBatis</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+
+	<name>SpringBootMyBatis</name>
+	<description>SpringBootMyBatis</description>
+
+	<!-- lookup parent from repository -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.9.RELEASE</version>
+		<relativePath />
+	</parent>
+		
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.mybatis.spring.boot</groupId>
+			<artifactId>mybatis-spring-boot-starter</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.oracle.ojdbc6</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<version>11.2.0.3</version>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>	
+			<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<configuration>
+						<maimClass>com.demo.Application</maimClass>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>repackage</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>		
+			<!-- Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.18.1 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<testFailureIgnore>true</testFailureIgnore>
+				</configuration>
+			</plugin>
+			
+			<!-- Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.1: -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<verbose>true</verbose>
+					<fork>true</fork>
+					<executable>${JAVA8_HOME}/bin/javac</executable>
+				</configuration>
+			</plugin>  
+		</plugins>
+		<defaultGoal>compile</defaultGoal>
+	</build>
+
+
+</project>

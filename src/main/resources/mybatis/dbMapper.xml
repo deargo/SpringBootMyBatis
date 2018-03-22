@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 映射文件，映射到对应的SQL接口 -->
+<mapper namespace="com.demo.DataMapper">
+
+	<!--返回的结果集，用于关联实体类属性和数据库字段 -->
+	<!--如果实体类属性和数据库属性名保持一致，就不需要javaType和jdbcType（必须大写）属性 -->
+	<resultMap id="Employee_resultMap" type="com.demo.Employee">
+		<result column="EMPNO" property="EMPNO" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="ENAME" property="ENAME" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="JOB" property="JOB" javaType="java.lang.String" jdbcType="VARCHAR" />
+		<result column="MGR" property="MGR" javaType="java.lang.Integer" jdbcType="INTEGER" />
+		<result column="HIREDATE" property="HIREDATE" javaType="java.util.Date" jdbcType="DATE"/>
+		<result column="SAL" property="SAL" javaType="java.lang.Double" jdbcType="DOUBLE" />
+		<result column="COMM" property="COMM" javaType="java.lang.Double" jdbcType="DOUBLE" />
+		<result column="DEPTNO" property="DEPTNO" javaType="java.lang.Integer" jdbcType="INTEGER" />
+	</resultMap>
+	
+	<!-- 查询数据 -->
+	<!-- 入参定义：在接口定义中使用@Param注解(单参/多参都可使用) -->
+	<!-- 语句末尾不能有分号：ORA-00911: invalid character -->
+	<select id="test_query" resultMap="Employee_resultMap">
+		select t.EMPNO, t.ENAME, t.JOB, t.MGR, t.HIREDATE, t.SAL, t.COMM, t.DEPTNO from scott.emp t where 1=1 
+		<if test="EMPNO != null">
+			and t.EMPNO &gt;= #{EMPNO}
+		</if>	
+		order by t.EMPNO
+	</select>
+
+	<!-- 插入数据 -->
+	<!-- 入参定义：实体类，会自动解析属性到对应的值-->
+	<insert id="test_insert" parameterType="com.demo.Employee">
+		insert into scott.emp (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO)
+		values (#{EMPNO}, #{ENAME}, #{JOB}, #{MGR}, #{HIREDATE}, #{SAL}, #{COMM}, #{DEPTNO})
+	</insert>
+	
+	<!-- 更新数据 -->
+	<!-- 入参定义：在接口定义中使用@Param注解(多参情况，只能使用这种形式) -->
+	<update id="test_update">
+		UPDATE scott.emp SET COMM = #{COMM}
+		WHERE EMPNO = #{EMPNO}
+	</update>
+	
+	<!-- 删除数据 -->
+	<!-- 入参定义：parameterType指定输入参数(单参情况，亦可@Param注解) -->
+	<delete id="test_delete" parameterType="java.lang.Integer">
+		DELETE FROM scott.emp t WHERE t.EMPNO =#{EMPNO}
+	</delete>
+
+	<!-- 批量查询 -->
+	<!-- 入参定义：使用[]数组array -->
+	<select id="test_multi_query"  parameterType="int[]" resultMap="Employee_resultMap">
+		select t.EMPNO, t.ENAME, t.JOB, t.MGR, t.HIREDATE, t.SAL, t.COMM, t.DEPTNO from scott.emp t where t.DEPTNO in
+		<!-- arr：array中的具体值 -->
+		<foreach collection="array" item="arr" index="no" open="(" separator="," close=")">  
+            #{arr}  
+        </foreach>
+	</select>	
+	
+	<!-- 批量插入 -->
+	<!-- 入参定义：使用List集合对象 -->
+	<insert id="test_multi_insert" parameterType="java.util.List">
+		merge into scott.emp r 
+		    <!-- insert 和update中所有的数据都需要从using中获取 -->
+			using(
+			<!-- item：list中的具体对象 -->
+			<foreach collection="list" index="index" item="item" open="" close="" separator="union">
+				select
+					#{item.EMPNO,jdbcType=INTEGER} as EMPNO,
+					#{item.ENAME,jdbcType=VARCHAR} as ENAME,
+					#{item.JOB,jdbcType=VARCHAR} as JOB,
+					#{item.MGR,jdbcType=INTEGER} as MGR,
+					#{item.HIREDATE,jdbcType=DATE} as HIREDATE,
+					#{item.SAL,jdbcType=DOUBLE} as SAL,
+					#{item.COMM,jdbcType=DOUBLE} as COMM,
+					#{item.DEPTNO,jdbcType=INTEGER} as DEPTNO
+				from dual
+			</foreach>
+			) tmp 
+			<!-- on后面的括弧不能省 -->
+			on ( tmp.EMPNO = r.EMPNO)
+		when matched THEN
+			update set
+			<!-- ORA-38104: 在on条件中的列是不可以更新的 -->
+			<!-- r.EMPNO = tmp.EMPNO, -->
+			r.ENAME = tmp.ENAME,
+			r.JOB = tmp.JOB,
+			r.MGR = tmp.MGR,
+			r.HIREDATE = tmp.HIREDATE,
+			r.SAL = tmp.SAL,
+			r.COMM = tmp.COMM,
+			r.DEPTNO = tmp.DEPTNO
+		when not matched THEN
+			insert
+			<trim prefix="(" suffix=")" suffixOverrides=",">
+				EMPNO,
+				ENAME,
+				JOB,
+				MGR,
+				HIREDATE,
+				SAL,
+				COMM,
+				DEPTNO
+			</trim>
+			<trim prefix="values (" suffix=")" suffixOverrides=",">
+				tmp.EMPNO,
+				tmp.ENAME,
+				tmp.JOB,
+				tmp.MGR,
+				tmp.HIREDATE,
+				tmp.SAL,
+				tmp.COMM,
+				tmp.DEPTNO
+			</trim>
+	</insert>
+
+	<!-- 批量删除 -->
+	<delete id="test_multi_delete">
+		<!-- delete from emp where empno in(7980,7981) --> 
+		delete from scott.emp t where t.empno in
+		 <foreach item="item" index="index" collection="list" open="(" separator="," close=")">  
+			  #{item}  
+ 			</foreach>
+	</delete>
+	
+	<!-- 执行存储过程。语句类型statementType一定要为CALLABLE-->
+	<!-- 入参定义：占位符形式写入SQL，然后接口中使用MAP传入 -->
+	<!-- 参数模式：共IN、OUT、INOUT三种，如果是IN参可不写，此外IN存在 null的情况，必须指定 jdbcType，还有 OUT时必须指定 jdbcType -->
+	<select id="test_exe_procedure1" statementType="CALLABLE">
+		{CALL
+		P_TEST_PAGING_QUERY(
+		'select t.EMPNO, t.ENAME, t.JOB, t.MGR, t.HIREDATE, t.SAL, t.COMM, t.DEPTNO from scott.emp t',
+		#{in_PAGE, mode=IN, jdbcType=INTEGER},
+		#{in_ROWS, mode=IN, jdbcType=INTEGER},
+		#{inout_TOTAL_RECORDS,mode=INOUT, jdbcType=INTEGER},
+		#{inout_TOTAL_PAGES, mode=INOUT, jdbcType=INTEGER},
+		#{out_SYSCURSOR, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=Employee_resultMap}
+		)}
+	</select>
+	
+	<!-- 执行存储过程2-->
+	<!-- 入参定义：使用parameterMap进行参数映射，这时候存储过程参数占位符为：? -->
+	<!-- 注意：调用存储过程的两个大括号和中间的内容不要换行！可能会出问题的。正确姿势：{CALL xxx(?,?...)} -->
+	<parameterMap type="java.util.Map" id="test_exe_procedure2_param">
+		<parameter property="in_SQL" mode="IN" jdbcType="INTEGER" />
+		<parameter property="in_PAGE" mode="IN" jdbcType="INTEGER" />
+		<parameter property="in_ROWS" mode="IN" jdbcType="INTEGER" />
+		<parameter property="inout_TOTAL_RECORDS" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="inout_TOTAL_PAGES" mode="INOUT" jdbcType="INTEGER" />
+		<parameter property="out_SYSCURSOR" mode="OUT" jdbcType="CURSOR" javaType="java.sql.ResultSet" resultMap="Employee_resultMap" />
+	</parameterMap>
+	<select id="test_exe_procedure2" statementType="CALLABLE" parameterMap="test_exe_procedure2_param">
+		{CALL P_TEST_PAGING_QUERY(?,?,?,?,?,?)}
+	</select>
+
+</mapper>
